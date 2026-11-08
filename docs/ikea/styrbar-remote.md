@@ -14,9 +14,9 @@ integration (multi-admin / Matter bridge).
 2. Share DIRIGERA with Home Assistant as a Matter bridge (IKEA app →
    *Integrations → Matter*), then add it in Home Assistant's Matter
    integration.
-3. The STYRBAR appears as a device with four **event** entities, one per
-   button. Press each button and watch which entity updates to see which is
-   which.
+3. The STYRBAR appears as a device with the model name **Remote Control N2**.
+   It has four **event** entities named *Top Button* (up), *Bottom Button*
+   (down), *Left Button* and *Right Button*.
 4. Create an automation from the blueprint. Put each remote's up / down /
    left / right entity in the matching field. To mirror several STYRBARs, add
    all their "up" entities to the up field, and so on.
@@ -53,8 +53,20 @@ default above runs.
   Add the [Uptime](https://www.home-assistant.io/integrations/uptime/)
   integration and select its sensor under *Advanced* to ignore events for 60
   seconds after startup.
-- The first press after a remote is newly added is ignored, because the
-  entity has no previous state yet.
+
+## Verified behaviour
+
+Recorded on real hardware (Home Assistant 2026.11.0, DIRIGERA Matter bridge):
+
+| Action on the remote | Events received |
+| --- | --- |
+| Tap top / bottom | `initial_press`, then `short_release` about 5 ms later |
+| Hold top / bottom | `initial_press` and `long_press` together, then `long_release` when let go |
+| Tap left / right | `initial_press` only |
+| Hold left | A **top** `initial_press` + `short_release` (the quirk above) |
+
+The same capture is replayed in
+[`tests/test_real_capture.py`](../../tests/test_real_capture.py).
 
 ## Custom action variables
 

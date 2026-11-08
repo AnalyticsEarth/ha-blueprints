@@ -19,6 +19,10 @@ entities**:
 | 2 | `…_4` | `…_5` | `…_6` |
 | 3 | `…_7` | `…_8` | `…_9` |
 
+Home Assistant may label `_1` "Scroll Left" and `_2` "Scroll Right". In
+testing, turning **clockwise** fired `_1`. Turn the wheel and watch which
+entity updates if you are unsure.
+
 Create **one automation per channel** you want to use. For example, channel 1
 could control the living room lights and channel 2 could cycle scenes. To
 mirror several wheels, add the matching entity from each wheel to the same
@@ -42,14 +46,15 @@ actions receive `steps`, the number of notches turned.
 
 ## Limitations (Home Assistant Matter integration)
 
-- **Rotation arrives after the wheel stops.** Home Assistant reports a single
-  "N presses" event once you stop turning. It does not stream updates while
-  the wheel is moving, so brightness changes in one step at the end of the
-  turn.
-- **Turns longer than 8 notches are dropped.** Home Assistant only creates
-  `multi_press_1`–`multi_press_8`. Longer bursts are silently discarded
+- **Turn slowly.** A slow turn sends one `multi_press_1` per notch, about
+  0.7 s apart, so brightness steps up notch by notch. A quicker turn is
+  grouped into a single `multi_press_N` once the wheel stops.
+- **A fast spin of more than 8 notches does nothing at all.** Home Assistant
+  only creates `multi_press_1`–`multi_press_8` and silently discards longer
+  bursts
   ([home-assistant/core#159035](https://github.com/home-assistant/core/issues/159035)).
-  Turn in shorter flicks, or raise *Brightness per notch*.
+  This was confirmed on real hardware. *Brightness per notch* defaults to 10 %
+  so that small turns cover the range.
 - Smooth real-time scrolling currently needs a custom integration such as
   [ha-ikea-bilresa](https://github.com/Vituhlos/ha-ikea-bilresa). This
   blueprint will be updated if Home Assistant adds native support.

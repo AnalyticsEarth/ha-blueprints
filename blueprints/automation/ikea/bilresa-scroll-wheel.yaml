@@ -91,7 +91,7 @@ blueprint:
                   value: scene_cycle
         brightness_step:
           name: Brightness per notch
-          default: 5
+          default: 10
           selector:
             number:
               min: 1
@@ -321,7 +321,7 @@ conditions:
     condition: template
     value_template: >-
       {{ trigger.from_state is not none and trigger.to_state is not none
-         and trigger.from_state.state not in ['unknown', 'unavailable']
+         and trigger.from_state.state != 'unavailable'
          and trigger.to_state.state not in ['unknown', 'unavailable']
          and gesture != 'none' }}
   - alias: Ignore duplicate events

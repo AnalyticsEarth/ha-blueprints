@@ -54,11 +54,12 @@ class Harness:
         state = self.hass.states.get("automation.under_test")
         assert state is not None and state.state == "on", "automation failed to load"
 
-    def add_button(self, entity_id: str, event_types: list[str]) -> None:
-        """Create a Matter-style event entity with a restored (past) state."""
+    def add_button(self, entity_id: str, event_types: list[str],
+                   state: str | None = None) -> None:
+        """Create a Matter-style event entity (default: a restored past event)."""
         self.hass.states.async_set(
             entity_id,
-            (self.now - timedelta(days=1)).isoformat(),
+            state or (self.now - timedelta(days=1)).isoformat(),
             {"event_types": event_types, "event_type": None, "device_class": "button"},
         )
 

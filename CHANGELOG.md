@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-08 (real-device testing)
+
+### Fixed
+
+- All remote blueprints: the first press on a button that had never been used
+  (entity state `unknown`) was ignored. Only `unavailable` is filtered now.
+
+### Changed
+
+- BILRESA scroll wheel: *Brightness per notch* default raised from 5 % to
+  10 %. Real hardware sends one event per notch on slow turns and drops fast
+  spins of more than 8 notches.
+- Docs: added recorded event sequences for STYRBAR ("Remote Control N2"), the
+  scroll wheel entity labels, and RODRET support in the dual button blueprint.
+- Tests: replay real event captures (`tests/test_real_capture.py`).
+
 ## 2026-11-08
 
 ### Added

@@ -109,7 +109,7 @@ async def _wheel(ha, **inputs):
 
 
 async def test_wheel_rotation_scales_with_notches(ha):
-    await _wheel(ha)
+    await _wheel(ha, brightness_step=5)
     await ha.press("event.wheel_a_button_2", "multi_press_4",
                    totalNumberOfPressesCounted=4)
     # 4 notches x 5% down = -51 on the 0-255 scale; light.b is off so untouched

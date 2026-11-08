@@ -17,6 +17,13 @@ Assistant over Matter (Thread).
    *Button 1* and its second button in *Button 2*. To mirror several remotes,
    add all of their button 1 entities to *Button 1*, and so on.
 
+## Also works with
+
+- **IKEA RODRET dimmer** (via the DIRIGERA Matter bridge). It reports
+  `short_release` / `long_press` / `long_release` instead of `multi_press_N`,
+  so press and hold work, but double press is not available. This was tested
+  against a recorded RODRET event capture.
+
 ## Gestures
 
 | Button | Gesture | Matter event | Default (lights selected) |
@@ -40,8 +47,6 @@ For every gesture: **custom action → scene → default**.
   Assistant, not in the blueprint.
 - **Phantom presses at startup:** see the *Advanced → Uptime sensor* option
   ([home-assistant/core#129041](https://github.com/home-assistant/core/issues/129041)).
-- The first press after a remote is newly added is ignored, because the
-  entity has no previous state yet.
 
 ## Custom action variables
 
