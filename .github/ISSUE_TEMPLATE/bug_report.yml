@@ -10,6 +10,7 @@ body:
         - IKEA BILRESA dual button
         - IKEA BILRESA scroll wheel
         - IKEA STYRBAR remote
+        - Philips Hue dimmer switch RWL020 / RWL021
         - Other
     validations:
       required: true

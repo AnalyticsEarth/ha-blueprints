@@ -12,7 +12,7 @@ body:
     id: integration
     attributes:
       label: Integration
-      options: [Matter, ZHA, Zigbee2MQTT, Other]
+      options: [Matter, Philips Hue, ZHA, Zigbee2MQTT, Other]
   - type: textarea
     id: details
     attributes:

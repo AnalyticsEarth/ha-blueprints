@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-08 (Philips Hue)
+
+### Added
+
+- **Philips Hue dimmer switch RWL020 / RWL021 (Hue Bridge)**: On (with Hue
+  app-style scene cycling), Up / Down tap and hold dimming, Off, On hold for
+  full brightness, per-gesture scene and custom action overrides, mirroring
+  across switches. Responds on press by default to avoid the bridge's ~1 s
+  event batching, and uses queued mode so bunched taps all run. Tested
+  against a capture from a real RWL021.
+
 ## 2026-11-08 (real-device testing)
 
 ### Fixed

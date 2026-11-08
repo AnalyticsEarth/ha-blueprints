@@ -1,8 +1,8 @@
 # Home Assistant Blueprints
 
 Blueprints and other reusable Home Assistant content from
-[AnalyticsEarth](https://github.com/AnalyticsEarth). It starts with IKEA Matter
-remotes and will grow from there.
+[AnalyticsEarth](https://github.com/AnalyticsEarth): remotes from IKEA (Matter)
+and Philips Hue, with more to come.
 
 Every blueprint is tested against a real Home Assistant instance in CI (see
 [`tests/`](tests)).
@@ -17,6 +17,12 @@ Every blueprint is tested against a real Home Assistant instance in CI (see
 | [BILRESA scroll wheel](docs/ikea/bilresa-scroll-wheel.md) | Matter over Thread | Scroll for brightness, colour temperature or scenes; press to toggle | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FAnalyticsEarth%2Fha-blueprints%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fikea%2Fbilresa-scroll-wheel.yaml) |
 | [STYRBAR 4-button remote](docs/ikea/styrbar-remote.md) | DIRIGERA Matter bridge | On / off, hold to dim, left / right for scenes or colour temperature | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FAnalyticsEarth%2Fha-blueprints%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fikea%2Fstyrbar-remote.yaml) |
 
+### Philips Hue
+
+| Device | Connection | What it does | Import |
+| --- | --- | --- | --- |
+| [Hue dimmer switch RWL020 / RWL021](docs/philips-hue/dimmer-switch-rwl021.md) | Hue Bridge | On (cycles scenes like the Hue app), up / down to dim, off | [![Import](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FAnalyticsEarth%2Fha-blueprints%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fphilips-hue%2Fdimmer-switch-rwl021.yaml) |
+
 All remote blueprints share the same design:
 
 - **Mirroring:** each button field accepts several entities, so any number of
@@ -27,10 +33,11 @@ All remote blueprints share the same design:
   scene's "last activated" time, so no helper entities are needed.
 - **Safe dimming:** dimming stops at a minimum brightness instead of
   switching lights off, and lights that are off stay off when dimming down.
-- **Matter quirks handled:** ignores unavailable/restore transitions, can
-  debounce duplicate events, and can optionally ignore replayed events for 60
-  seconds after Home Assistant starts (using the
-  [Uptime](https://www.home-assistant.io/integrations/uptime/) sensor).
+- **Device quirks handled:** ignores unavailable/restore transitions and can
+  debounce duplicate events. Matter remotes can optionally ignore events
+  replayed during the first 60 seconds after Home Assistant starts (using the
+  [Uptime](https://www.home-assistant.io/integrations/uptime/) sensor). The
+  Hue blueprint copes with the Hue Bridge's batched events.
 
 ## Installing a blueprint
 

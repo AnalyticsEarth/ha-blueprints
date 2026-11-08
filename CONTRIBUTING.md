@@ -29,10 +29,17 @@ its description.
 - Remote blueprints:
   - accept `multiple: true` entity selectors so remotes can be mirrored;
   - resolve each gesture as custom action → scene → default behaviour;
-  - ignore `unknown`/`unavailable` transitions;
-  - offer the debounce and uptime-sensor options;
+  - ignore events from `unavailable` and to `unknown`/`unavailable` (but
+    not from `unknown`, or the first press on a never-used button is lost);
+  - offer the debounce option, plus the uptime-sensor option for Matter
+    devices (Matter can replay events at startup);
+  - use `mode: restart` when a hold loop is stopped by the release event,
+    or `mode: queued` when the device can deliver several events at once
+    (e.g. the Hue Bridge), with the hold loop watching the entity's state;
   - expose `button`, `gesture` and `trigger` (plus any device-specific
     values, e.g. `steps`) to custom actions.
+- Where possible, record real event sequences from the device and replay
+  them in the tests, with the real timings.
 - Add the blueprint to the table in `README.md` with an import badge, and add
   an entry to `CHANGELOG.md`.
 
@@ -40,7 +47,7 @@ its description.
 
 Each blueprint gets behaviour tests in `tests/`. The `ha` fixture
 (`tests/conftest.py`) loads the blueprint into a real Home Assistant, simulates
-Matter event entities and records the service calls made. Run them with:
+button event entities and records the service calls made. Run them with:
 
 ```bash
 uv sync --group test
