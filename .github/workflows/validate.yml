@@ -1,0 +1,25 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # weekly run against the latest Home Assistant test release
+    - cron: "0 6 * * 1"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
+      - name: Install
+        run: uv sync --group test
+      - name: Lint YAML
+        run: uv run yamllint .
+      - name: Test blueprints in Home Assistant
+        run: uv run pytest -v

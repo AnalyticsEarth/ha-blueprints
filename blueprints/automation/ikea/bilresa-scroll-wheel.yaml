@@ -1,0 +1,456 @@
+blueprint:
+  name: IKEA BILRESA scroll wheel (Matter)
+  author: AnalyticsEarth
+  description: >-
+    Control lights and scenes with one or more IKEA BILRESA scroll wheel
+    remotes paired to Home Assistant over Matter (Thread).
+
+
+    The wheel has **3 channels**. Each channel exposes three Matter button
+    (event) entities: clockwise, counter-clockwise and press (channel 1 =
+    `_1` / `_2` / `_3`, channel 2 = `_4` / `_5` / `_6`, channel 3 = `_7` /
+    `_8` / `_9`). Create **one automation per channel** you want to use.
+
+
+    **Mirroring:** select the matching entity from every wheel that should act
+    the same (e.g. `_1` from two wheels in the clockwise field).
+
+
+    **Defaults (when lights are selected):** rotate = brightness (or colour
+    temperature / scene cycle), press = on/off, double press = full
+    brightness.
+
+
+    **Overrides:** for each gesture, a *custom action* takes priority, then a
+    *scene*, then the default behaviour.
+
+
+    Docs: https://github.com/AnalyticsEarth/ha-blueprints/blob/main/docs/ikea/bilresa-scroll-wheel.md
+  source_url: https://github.com/AnalyticsEarth/ha-blueprints/blob/main/blueprints/automation/ikea/bilresa-scroll-wheel.yaml
+  domain: automation
+  homeassistant:
+    min_version: "2024.10.0"
+  input:
+    remotes:
+      name: Remotes (one channel)
+      icon: mdi:remote
+      input:
+        cw_entities:
+          name: Rotate clockwise
+          description: Channel 1 = `_1`, channel 2 = `_4`, channel 3 = `_7`.
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - integration: matter
+                  domain: event
+        ccw_entities:
+          name: Rotate counter-clockwise
+          description: Channel 1 = `_2`, channel 2 = `_5`, channel 3 = `_8`.
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - integration: matter
+                  domain: event
+        press_entities:
+          name: Press
+          description: Channel 1 = `_3`, channel 2 = `_6`, channel 3 = `_9`.
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - integration: matter
+                  domain: event
+    lights_section:
+      name: Lights
+      icon: mdi:lightbulb-group
+      description: Lights driven by the default behaviour. Leave empty to only use scenes / custom actions.
+      input:
+        lights:
+          name: Lights
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - domain: light
+        rotate_mode:
+          name: Rotation controls
+          default: brightness
+          selector:
+            select:
+              mode: list
+              options:
+                - label: Brightness
+                  value: brightness
+                - label: Colour temperature
+                  value: color_temp
+                - label: Scene cycle (one scene per turn)
+                  value: scene_cycle
+        brightness_step:
+          name: Brightness per notch
+          default: 5
+          selector:
+            number:
+              min: 1
+              max: 25
+              unit_of_measurement: "%"
+        kelvin_step:
+          name: Colour temperature per notch
+          default: 150
+          selector:
+            number:
+              min: 10
+              max: 1000
+              step: 10
+              unit_of_measurement: K
+        min_brightness:
+          name: Minimum brightness
+          description: Turning down stops here instead of switching the lights off.
+          default: 1
+          selector:
+            number:
+              min: 1
+              max: 50
+              unit_of_measurement: "%"
+        transition:
+          name: Transition
+          default: 0.4
+          selector:
+            number:
+              min: 0
+              max: 5
+              step: 0.1
+              unit_of_measurement: s
+    scenes_section:
+      name: Scenes
+      icon: mdi:palette
+      input:
+        scene_cycle:
+          name: Scene cycle
+          description: >-
+            Used when rotation controls are set to "Scene cycle": clockwise =
+            next, counter-clockwise = previous. Continues from whichever of
+            these scenes was activated most recently.
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - domain: scene
+        scene_single:
+          name: Press scene
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: scene
+        scene_double:
+          name: Double press scene
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: scene
+        scene_triple:
+          name: Triple press scene
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: scene
+        scene_hold:
+          name: Hold scene
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: scene
+    custom_section:
+      name: Custom actions
+      icon: mdi:script-text
+      description: >-
+        Anything set here replaces the scene / default behaviour for that
+        gesture. Variables available: `button` (cw/ccw/press), `gesture`
+        (rotate/single/double/triple/hold/release), `steps` (notches turned,
+        1-8) and `trigger`.
+      collapsed: true
+      input:
+        action_cw:
+          name: Rotate clockwise
+          default: []
+          selector:
+            action: {}
+        action_ccw:
+          name: Rotate counter-clockwise
+          default: []
+          selector:
+            action: {}
+        action_single:
+          name: Press
+          default: []
+          selector:
+            action: {}
+        action_double:
+          name: Double press
+          default: []
+          selector:
+            action: {}
+        action_triple:
+          name: Triple press
+          default: []
+          selector:
+            action: {}
+        action_hold:
+          name: Hold
+          default: []
+          selector:
+            action: {}
+        action_release:
+          name: Release (after hold)
+          default: []
+          selector:
+            action: {}
+    advanced_section:
+      name: Advanced
+      icon: mdi:cog
+      collapsed: true
+      input:
+        debounce:
+          name: Duplicate event window
+          description: >-
+            Identical events on the same entity within this window are ignored.
+            0 disables the check.
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 1000
+              step: 10
+              unit_of_measurement: ms
+        uptime_sensor:
+          name: Uptime sensor (optional)
+          description: >-
+            Matter can replay old button events when Home Assistant starts.
+            Select the Uptime integration's sensor to ignore events during the
+            first 60 seconds after startup.
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: sensor
+                  device_class: timestamp
+
+mode: queued
+max: 5
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: !input cw_entities
+    id: cw
+  - trigger: state
+    entity_id: !input ccw_entities
+    id: ccw
+  - trigger: state
+    entity_id: !input press_entities
+    id: press
+
+variables:
+  lights: !input lights
+  rotate_mode: !input rotate_mode
+  brightness_step: !input brightness_step
+  kelvin_step: !input kelvin_step
+  min_pct: !input min_brightness
+  transition: !input transition
+  scene_cycle: !input scene_cycle
+  scene_single: !input scene_single
+  scene_double: !input scene_double
+  scene_triple: !input scene_triple
+  scene_hold: !input scene_hold
+  action_cw: !input action_cw
+  action_ccw: !input action_ccw
+  action_single: !input action_single
+  action_double: !input action_double
+  action_triple: !input action_triple
+  action_hold: !input action_hold
+  debounce: !input debounce
+  uptime_sensor: !input uptime_sensor
+  button: "{{ trigger.id }}"
+  evt: "{{ trigger.to_state.attributes.get('event_type', '') if trigger.to_state else '' }}"
+  types: "{{ trigger.to_state.attributes.get('event_types', []) if trigger.to_state else [] }}"
+  # Rotation arrives as one multi_press_N after the wheel stops (N = notches).
+  # Home Assistant drops bursts above 8 notches.
+  steps: >-
+    {% if evt is string and evt.startswith('multi_press_') %}
+      {{ trigger.to_state.attributes.get('totalNumberOfPressesCounted')
+         | int(evt[12:] | int(1)) }}
+    {% else %}1{% endif %}
+  gesture: >-
+    {% set multi = types | select('match', 'multi_press_') | list | count > 0 %}
+    {% if button in ['cw', 'ccw'] %}
+      {% if evt is string and evt.startswith('multi_press_') %}rotate
+      {% elif not multi and evt == 'initial_press' %}rotate
+      {% else %}none{% endif %}
+    {% elif evt == 'long_press' %}hold
+    {% elif evt == 'long_release' %}release
+    {% elif evt == 'multi_press_1' %}single
+    {% elif evt == 'multi_press_2' %}double
+    {% elif evt == 'multi_press_3' %}triple
+    {% elif not multi and evt == 'short_release' %}single
+    {% elif not multi and evt == 'initial_press' and 'short_release' not in types %}single
+    {% else %}none{% endif %}
+  key: "{{ button if gesture == 'rotate' else gesture }}"
+  custom_action: >-
+    {{ {'cw': action_cw, 'ccw': action_ccw, 'single': action_single,
+        'double': action_double, 'triple': action_triple,
+        'hold': action_hold}.get(key, [])
+       | default([], true) | count > 0 }}
+  scene: >-
+    {{ {'single': scene_single, 'double': scene_double,
+        'triple': scene_triple, 'hold': scene_hold}.get(key, '')
+       | default('', true) }}
+  has_lights: "{{ lights | default([], true) | count > 0 }}"
+  has_cycle: "{{ scene_cycle | default([], true) | count > 0 }}"
+  direction: "{{ -1 if button == 'ccw' else 1 }}"
+
+conditions:
+  - alias: Ignore restarts, unavailable devices and unknown events
+    condition: template
+    value_template: >-
+      {{ trigger.from_state is not none and trigger.to_state is not none
+         and trigger.from_state.state not in ['unknown', 'unavailable']
+         and trigger.to_state.state not in ['unknown', 'unavailable']
+         and gesture != 'none' }}
+  - alias: Ignore duplicate events
+    condition: template
+    value_template: >-
+      {{ debounce | int(0) == 0
+         or trigger.from_state.attributes.get('event_type') != evt
+         or (as_timestamp(trigger.to_state.state, 0)
+             - as_timestamp(trigger.from_state.state, 0)) * 1000 >= debounce | int(0) }}
+  - alias: Ignore events replayed at startup
+    condition: template
+    value_template: >-
+      {{ uptime_sensor in ['', none]
+         or (as_timestamp(now()) - as_timestamp(states(uptime_sensor), 0)) > 60 }}
+
+actions:
+  - choose:
+      # ------------------------------------------------------- custom actions
+      - conditions: "{{ custom_action and key == 'cw' }}"
+        sequence: !input action_cw
+      - conditions: "{{ custom_action and key == 'ccw' }}"
+        sequence: !input action_ccw
+      - conditions: "{{ custom_action and key == 'single' }}"
+        sequence: !input action_single
+      - conditions: "{{ custom_action and key == 'double' }}"
+        sequence: !input action_double
+      - conditions: "{{ custom_action and key == 'triple' }}"
+        sequence: !input action_triple
+      - conditions: "{{ custom_action and key == 'hold' }}"
+        sequence: !input action_hold
+      - conditions: "{{ key == 'release' }}"
+        sequence: !input action_release
+      # --------------------------------------------------------------- scenes
+      - conditions: "{{ scene | count > 0 }}"
+        sequence:
+          - action: scene.turn_on
+            target:
+              entity_id: "{{ scene }}"
+            data:
+              transition: "{{ transition }}"
+      - conditions: "{{ gesture == 'rotate' and rotate_mode == 'scene_cycle' and has_cycle }}"
+        sequence:
+          - alias: Activate next/previous scene in the cycle
+            action: scene.turn_on
+            target:
+              entity_id: >-
+                {% set ns = namespace(idx=-1, latest=0) %}
+                {% for s in scene_cycle %}
+                  {% set ts = as_timestamp(states(s), 0) %}
+                  {% if ts > ns.latest %}
+                    {% set ns.latest = ts %}{% set ns.idx = loop.index0 %}
+                  {% endif %}
+                {% endfor %}
+                {% if ns.idx < 0 %}
+                  {{ scene_cycle[0] if direction > 0 else scene_cycle[-1] }}
+                {% else %}
+                  {{ scene_cycle[(ns.idx + direction) % (scene_cycle | count)] }}
+                {% endif %}
+            data:
+              transition: "{{ transition }}"
+      # ------------------------------------------------- default light actions
+      - conditions: "{{ has_lights and gesture == 'rotate' and rotate_mode == 'brightness' }}"
+        sequence:
+          - variables:
+              delta_pct: "{{ brightness_step * steps * direction }}"
+          - alias: Step brightness of each light (clamped to minimum)
+            repeat:
+              for_each: "{{ lights }}"
+              sequence:
+                - if:
+                    - condition: template
+                      value_template: "{{ delta_pct > 0 or is_state(repeat.item, 'on') }}"
+                  then:
+                    - action: light.turn_on
+                      target:
+                        entity_id: "{{ repeat.item }}"
+                      data:
+                        brightness: >-
+                          {% set cur = (state_attr(repeat.item, 'brightness') or 0) | int
+                             if is_state(repeat.item, 'on') else 0 %}
+                          {% set floor = [1, (min_pct * 2.55) | round(0) | int] | max %}
+                          {{ [floor, [255, (cur + delta_pct * 2.55) | round(0) | int] | min] | max }}
+                        transition: "{{ transition }}"
+      - conditions: "{{ has_lights and gesture == 'rotate' and rotate_mode == 'color_temp' }}"
+        sequence:
+          - variables:
+              delta_k: "{{ kelvin_step * steps * direction }}"
+          - alias: Step colour temperature of each light that is on
+            repeat:
+              for_each: "{{ lights }}"
+              sequence:
+                - if:
+                    - condition: template
+                      value_template: >-
+                        {{ is_state(repeat.item, 'on')
+                           and state_attr(repeat.item, 'color_temp_kelvin') is not none }}
+                  then:
+                    - action: light.turn_on
+                      target:
+                        entity_id: "{{ repeat.item }}"
+                      data:
+                        color_temp_kelvin: >-
+                          {% set k = state_attr(repeat.item, 'color_temp_kelvin') | int %}
+                          {% set lo = state_attr(repeat.item, 'min_color_temp_kelvin') | int(2000) %}
+                          {% set hi = state_attr(repeat.item, 'max_color_temp_kelvin') | int(6500) %}
+                          {{ [lo, [hi, k + delta_k] | min] | max }}
+                        transition: "{{ transition }}"
+      - conditions: "{{ has_lights and gesture == 'single' }}"
+        sequence:
+          - if:
+              - condition: template
+                value_template: "{{ lights | select('is_state', 'on') | list | count > 0 }}"
+            then:
+              - action: light.turn_off
+                target:
+                  entity_id: "{{ lights }}"
+                data:
+                  transition: "{{ transition }}"
+            else:
+              - action: light.turn_on
+                target:
+                  entity_id: "{{ lights }}"
+                data:
+                  transition: "{{ transition }}"
+      - conditions: "{{ has_lights and gesture == 'double' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ lights }}"
+            data:
+              brightness_pct: 100
+              transition: "{{ transition }}"

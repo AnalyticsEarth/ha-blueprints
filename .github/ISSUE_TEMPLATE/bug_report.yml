@@ -1,0 +1,42 @@
+name: Blueprint bug
+description: A blueprint does not behave as documented
+labels: [bug]
+body:
+  - type: dropdown
+    id: blueprint
+    attributes:
+      label: Blueprint
+      options:
+        - IKEA BILRESA dual button
+        - IKEA BILRESA scroll wheel
+        - IKEA STYRBAR remote
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.11.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: attributes
+    attributes:
+      label: Event entity attributes
+      description: >-
+        Developer tools → States → your remote's event entity. Paste the
+        attributes (especially `event_types` and `event_type`) after pressing
+        the button.
+      render: yaml
+  - type: textarea
+    id: trace
+    attributes:
+      label: Automation trace
+      description: Automation → ⋮ → Traces → Download trace (optional).

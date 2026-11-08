@@ -1,0 +1,20 @@
+name: New device or blueprint idea
+description: Suggest a device or automation to add
+labels: [enhancement]
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Device / idea
+    validations:
+      required: true
+  - type: dropdown
+    id: integration
+    attributes:
+      label: Integration
+      options: [Matter, ZHA, Zigbee2MQTT, Other]
+  - type: textarea
+    id: details
+    attributes:
+      label: Event entity attributes or desired behaviour
+      render: yaml

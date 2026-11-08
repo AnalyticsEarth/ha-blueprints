@@ -1,0 +1,481 @@
+blueprint:
+  name: IKEA STYRBAR remote (Matter via DIRIGERA)
+  author: AnalyticsEarth
+  description: >-
+    Control lights and scenes with one or more IKEA STYRBAR 4-button remotes
+    (E2001 / E2002) that are shared to Home Assistant through the DIRIGERA
+    hub's Matter bridge.
+
+
+    **Mirroring:** select the matching button entity from every remote you want
+    to behave identically (e.g. the "up" entity of three STYRBARs). Any of them
+    triggers the same actions.
+
+
+    **Defaults (when lights are selected):** up tap = on, down tap = off,
+    hold up/down = dim up/down until released, left/right tap = previous/next
+    scene in the scene cycle (or warmer/cooler colour temperature when no
+    scenes are listed).
+
+
+    **Overrides:** for each gesture, a *custom action* takes priority, then a
+    *scene*, then the default light behaviour.
+
+
+    Docs: https://github.com/AnalyticsEarth/ha-blueprints/blob/main/docs/ikea/styrbar-remote.md
+  source_url: https://github.com/AnalyticsEarth/ha-blueprints/blob/main/blueprints/automation/ikea/styrbar-remote.yaml
+  domain: automation
+  homeassistant:
+    min_version: "2024.10.0"
+  input:
+    remotes:
+      name: Remotes
+      icon: mdi:remote
+      description: >-
+        Pick the Matter button (event) entities for each STYRBAR button. Select
+        one entity per remote in each field to mirror several remotes.
+      input:
+        up_buttons:
+          name: Up button(s) (large sun)
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - integration: matter
+                  domain: event
+        down_buttons:
+          name: Down button(s) (small sun)
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - integration: matter
+                  domain: event
+        left_buttons:
+          name: Left button(s)
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - integration: matter
+                  domain: event
+        right_buttons:
+          name: Right button(s)
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - integration: matter
+                  domain: event
+    lights_section:
+      name: Lights
+      icon: mdi:lightbulb-group
+      description: Lights driven by the default button behaviour. Leave empty to only use scenes / custom actions.
+      input:
+        lights:
+          name: Lights
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - domain: light
+        hold_step:
+          name: Hold dimming step
+          description: Brightness change per step while a button is held.
+          default: 10
+          selector:
+            number:
+              min: 1
+              max: 50
+              unit_of_measurement: "%"
+        hold_interval:
+          name: Hold step interval
+          description: Time between brightness steps while held.
+          default: 400
+          selector:
+            number:
+              min: 100
+              max: 2000
+              step: 50
+              unit_of_measurement: ms
+        min_brightness:
+          name: Minimum brightness
+          description: Dimming stops here instead of switching the lights off.
+          default: 1
+          selector:
+            number:
+              min: 1
+              max: 50
+              unit_of_measurement: "%"
+        kelvin_step:
+          name: Colour temperature step
+          description: Change per left/right tap when no scene cycle is set.
+          default: 500
+          selector:
+            number:
+              min: 100
+              max: 2000
+              step: 50
+              unit_of_measurement: K
+        transition:
+          name: Transition
+          default: 0.5
+          selector:
+            number:
+              min: 0
+              max: 5
+              step: 0.1
+              unit_of_measurement: s
+    scenes_section:
+      name: Scenes
+      icon: mdi:palette
+      input:
+        scene_cycle:
+          name: Scene cycle
+          description: >-
+            Left/right tap step backwards/forwards through these scenes
+            (unless overridden below). The cycle continues from whichever of
+            these scenes was activated most recently.
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - domain: scene
+        scene_up_tap:
+          name: Up tap scene
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: scene
+        scene_down_tap:
+          name: Down tap scene
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: scene
+        scene_left_tap:
+          name: Left tap scene
+          description: Overrides the scene cycle for left.
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: scene
+        scene_right_tap:
+          name: Right tap scene
+          description: Overrides the scene cycle for right.
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: scene
+    custom_section:
+      name: Custom actions
+      icon: mdi:script-text
+      description: >-
+        Anything set here replaces the scene / default behaviour for that
+        gesture. Variables available: `button` (up/down/left/right), `gesture`
+        (tap/hold/release) and `trigger`.
+      collapsed: true
+      input:
+        action_up_tap:
+          name: Up tap
+          default: []
+          selector:
+            action: {}
+        action_up_hold:
+          name: Up hold
+          default: []
+          selector:
+            action: {}
+        action_up_release:
+          name: Up release (after hold)
+          default: []
+          selector:
+            action: {}
+        action_down_tap:
+          name: Down tap
+          default: []
+          selector:
+            action: {}
+        action_down_hold:
+          name: Down hold
+          default: []
+          selector:
+            action: {}
+        action_down_release:
+          name: Down release (after hold)
+          default: []
+          selector:
+            action: {}
+        action_left_tap:
+          name: Left tap
+          default: []
+          selector:
+            action: {}
+        action_right_tap:
+          name: Right tap
+          default: []
+          selector:
+            action: {}
+    advanced_section:
+      name: Advanced
+      icon: mdi:cog
+      collapsed: true
+      input:
+        debounce:
+          name: Duplicate event window
+          description: >-
+            STYRBAR via DIRIGERA sometimes repeats the same event. Identical
+            events on the same entity within this window are ignored. Set to 0
+            to disable.
+          default: 250
+          selector:
+            number:
+              min: 0
+              max: 1000
+              step: 10
+              unit_of_measurement: ms
+        uptime_sensor:
+          name: Uptime sensor (optional)
+          description: >-
+            Matter can replay old button events when Home Assistant starts.
+            Select the Uptime integration's sensor to ignore presses during the
+            first 60 seconds after startup.
+          default: ""
+          selector:
+            entity:
+              filter:
+                - domain: sensor
+                  device_class: timestamp
+
+mode: restart
+max_exceeded: silent
+
+triggers:
+  - trigger: state
+    entity_id: !input up_buttons
+    id: up
+  - trigger: state
+    entity_id: !input down_buttons
+    id: down
+  - trigger: state
+    entity_id: !input left_buttons
+    id: left
+  - trigger: state
+    entity_id: !input right_buttons
+    id: right
+
+variables:
+  lights: !input lights
+  hold_step: !input hold_step
+  hold_interval: !input hold_interval
+  min_pct: !input min_brightness
+  kelvin_step: !input kelvin_step
+  transition: !input transition
+  scene_cycle: !input scene_cycle
+  scene_up_tap: !input scene_up_tap
+  scene_down_tap: !input scene_down_tap
+  scene_left_tap: !input scene_left_tap
+  scene_right_tap: !input scene_right_tap
+  action_up_tap: !input action_up_tap
+  action_up_hold: !input action_up_hold
+  action_up_release: !input action_up_release
+  action_down_tap: !input action_down_tap
+  action_down_hold: !input action_down_hold
+  action_down_release: !input action_down_release
+  action_left_tap: !input action_left_tap
+  action_right_tap: !input action_right_tap
+  debounce: !input debounce
+  uptime_sensor: !input uptime_sensor
+  button: "{{ trigger.id }}"
+  evt: "{{ trigger.to_state.attributes.get('event_type', '') if trigger.to_state else '' }}"
+  types: "{{ trigger.to_state.attributes.get('event_types', []) if trigger.to_state else [] }}"
+  # Up/down report tap as short_release (initial_press also fires on holds);
+  # left/right only report initial_press.
+  gesture: >-
+    {% if evt == 'long_press' %}hold
+    {% elif evt == 'long_release' %}release
+    {% elif evt in ['short_release', 'multi_press_1'] %}tap
+    {% elif evt == 'initial_press' and 'short_release' not in types %}tap
+    {% else %}none{% endif %}
+  key: "{{ button ~ '_' ~ gesture }}"
+  has_lights: "{{ lights | default([], true) | count > 0 }}"
+  has_cycle: "{{ scene_cycle | default([], true) | count > 0 }}"
+
+conditions:
+  - alias: Ignore restarts, unavailable devices and unknown events
+    condition: template
+    value_template: >-
+      {{ trigger.from_state is not none and trigger.to_state is not none
+         and trigger.from_state.state not in ['unknown', 'unavailable']
+         and trigger.to_state.state not in ['unknown', 'unavailable']
+         and gesture != 'none' }}
+  - alias: Ignore duplicate events
+    condition: template
+    value_template: >-
+      {{ debounce | int(0) == 0
+         or trigger.from_state.attributes.get('event_type') != evt
+         or (as_timestamp(trigger.to_state.state, 0)
+             - as_timestamp(trigger.from_state.state, 0)) * 1000 >= debounce | int(0) }}
+  - alias: Ignore events replayed at startup
+    condition: template
+    value_template: >-
+      {{ uptime_sensor in ['', none]
+         or (as_timestamp(now()) - as_timestamp(states(uptime_sensor), 0)) > 60 }}
+
+actions:
+  - choose:
+      # ---------------------------------------------------------------- up tap
+      - conditions: "{{ key == 'up_tap' }}"
+        sequence:
+          - choose:
+              - conditions: "{{ action_up_tap | default([], true) | count > 0 }}"
+                sequence: !input action_up_tap
+              - conditions: "{{ scene_up_tap | default('', true) | count > 0 }}"
+                sequence:
+                  - action: scene.turn_on
+                    target:
+                      entity_id: "{{ scene_up_tap }}"
+                    data:
+                      transition: "{{ transition }}"
+              - conditions: "{{ has_lights }}"
+                sequence:
+                  - action: light.turn_on
+                    target:
+                      entity_id: "{{ lights }}"
+                    data:
+                      transition: "{{ transition }}"
+      # -------------------------------------------------------------- down tap
+      - conditions: "{{ key == 'down_tap' }}"
+        sequence:
+          - choose:
+              - conditions: "{{ action_down_tap | default([], true) | count > 0 }}"
+                sequence: !input action_down_tap
+              - conditions: "{{ scene_down_tap | default('', true) | count > 0 }}"
+                sequence:
+                  - action: scene.turn_on
+                    target:
+                      entity_id: "{{ scene_down_tap }}"
+                    data:
+                      transition: "{{ transition }}"
+              - conditions: "{{ has_lights }}"
+                sequence:
+                  - action: light.turn_off
+                    target:
+                      entity_id: "{{ lights }}"
+                    data:
+                      transition: "{{ transition }}"
+      # --------------------------------------------------------- up/down hold
+      - conditions: "{{ key in ['up_hold', 'down_hold'] }}"
+        sequence:
+          - choose:
+              - conditions: "{{ key == 'up_hold' and action_up_hold | default([], true) | count > 0 }}"
+                sequence: !input action_up_hold
+              - conditions: "{{ key == 'down_hold' and action_down_hold | default([], true) | count > 0 }}"
+                sequence: !input action_down_hold
+              - conditions: "{{ has_lights }}"
+                sequence:
+                  - variables:
+                      delta_pct: "{{ hold_step if button == 'up' else -hold_step }}"
+                      step_transition: "{{ hold_interval / 1000 }}"
+                      max_steps: "{{ (100 / hold_step) | round(0, 'ceil') | int + 2 }}"
+                  # Loops until the release event restarts this automation.
+                  - repeat:
+                      sequence:
+                        - alias: Step brightness of each light (clamped to minimum)
+                          repeat:
+                            for_each: "{{ lights }}"
+                            sequence:
+                              - if:
+                                  - condition: template
+                                    value_template: "{{ delta_pct > 0 or is_state(repeat.item, 'on') }}"
+                                then:
+                                  - action: light.turn_on
+                                    target:
+                                      entity_id: "{{ repeat.item }}"
+                                    data:
+                                      brightness: >-
+                                        {% set cur = (state_attr(repeat.item, 'brightness') or 0) | int
+                                           if is_state(repeat.item, 'on') else 0 %}
+                                        {% set floor = [1, (min_pct * 2.55) | round(0) | int] | max %}
+                                        {{ [floor, [255, (cur + delta_pct * 2.55) | round(0) | int] | min] | max }}
+                                      transition: "{{ step_transition }}"
+                        - delay:
+                            milliseconds: "{{ hold_interval }}"
+                      until:
+                        - condition: template
+                          value_template: "{{ repeat.index >= max_steps }}"
+      # ------------------------------------------------------ up/down release
+      - conditions: "{{ key == 'up_release' }}"
+        sequence: !input action_up_release
+      - conditions: "{{ key == 'down_release' }}"
+        sequence: !input action_down_release
+      # ----------------------------------------------------- left/right tap
+      - conditions: "{{ key in ['left_tap', 'right_tap'] }}"
+        sequence:
+          - variables:
+              direction: "{{ 1 if button == 'right' else -1 }}"
+              scene: "{{ scene_right_tap if button == 'right' else scene_left_tap }}"
+          - choose:
+              - conditions: "{{ button == 'left' and action_left_tap | default([], true) | count > 0 }}"
+                sequence: !input action_left_tap
+              - conditions: "{{ button == 'right' and action_right_tap | default([], true) | count > 0 }}"
+                sequence: !input action_right_tap
+              - conditions: "{{ scene | default('', true) | count > 0 }}"
+                sequence:
+                  - action: scene.turn_on
+                    target:
+                      entity_id: "{{ scene }}"
+                    data:
+                      transition: "{{ transition }}"
+              - conditions: "{{ has_cycle }}"
+                sequence:
+                  - alias: Activate next/previous scene in the cycle
+                    action: scene.turn_on
+                    target:
+                      entity_id: >-
+                        {% set ns = namespace(idx=-1, latest=0) %}
+                        {% for s in scene_cycle %}
+                          {% set ts = as_timestamp(states(s), 0) %}
+                          {% if ts > ns.latest %}
+                            {% set ns.latest = ts %}{% set ns.idx = loop.index0 %}
+                          {% endif %}
+                        {% endfor %}
+                        {% if ns.idx < 0 %}
+                          {{ scene_cycle[0] if direction > 0 else scene_cycle[-1] }}
+                        {% else %}
+                          {{ scene_cycle[(ns.idx + direction) % (scene_cycle | count)] }}
+                        {% endif %}
+                    data:
+                      transition: "{{ transition }}"
+              - conditions: "{{ has_lights }}"
+                sequence:
+                  - variables:
+                      delta_k: "{{ kelvin_step * direction }}"
+                  - alias: Step colour temperature of each light that is on
+                    repeat:
+                      for_each: "{{ lights }}"
+                      sequence:
+                        - if:
+                            - condition: template
+                              value_template: >-
+                                {{ is_state(repeat.item, 'on')
+                                   and state_attr(repeat.item, 'color_temp_kelvin') is not none }}
+                          then:
+                            - action: light.turn_on
+                              target:
+                                entity_id: "{{ repeat.item }}"
+                              data:
+                                color_temp_kelvin: >-
+                                  {% set k = state_attr(repeat.item, 'color_temp_kelvin') | int %}
+                                  {% set lo = state_attr(repeat.item, 'min_color_temp_kelvin') | int(2000) %}
+                                  {% set hi = state_attr(repeat.item, 'max_color_temp_kelvin') | int(6500) %}
+                                  {{ [lo, [hi, k + delta_k] | min] | max }}
+                                transition: "{{ transition }}"
